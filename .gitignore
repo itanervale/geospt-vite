@@ -1,0 +1,46 @@
+# Dependências
+node_modules/
+
+# Build / saída de produção
+dist/
+build/
+
+# Ambiente / variáveis sensíveis
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache / arquivos temporários
+.vite/
+.cache/
+.tmp/
+temp/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores / IDEs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Testes / cobertura
+coverage/
+
+# Arquivos compactados gerados localmente
+*.zip
+*.rar
+*.7z
+
+# Netlify / Vercel
+.netlify/
+.vercel/
