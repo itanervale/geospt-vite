@@ -3579,9 +3579,9 @@ function PainelSondagem({ nome, sondagem, onRemover, onDuplicar }) {
   };
 
   return (
-    <div className="p-4 max-w-none">
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.85fr)] items-start">
-        <section className="min-w-0">
+    <div className="w-full max-w-none p-4">
+      <div className="grid grid-cols-1 gap-4 2xl:gap-5 xl:grid-cols-[minmax(460px,0.78fr)_minmax(620px,1.22fr)] items-start">
+      <section className="min-w-0 overflow-hidden">
       {/* Cabeçalho do painel */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
