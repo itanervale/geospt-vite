@@ -1,6 +1,7 @@
 // src/components/SondagemPreview.jsx
 
-import React, { useId, useMemo } from "react";
+import React, { useId, useMemo, useRef } from "react";
+import { toPng } from "html-to-image";
 
 const DEFAULT_SOIL_STYLES = {
   areia: {
@@ -481,6 +482,8 @@ export default function SondagemPreview({
   const reactId = useId().replace(/:/g, "");
   const prefix = `sondagem-${reactId}`;
 
+  const exportRef = useRef(null);
+
   const preparedReadings = useMemo(() => {
     return [...readings]
       .map((item, index) => ({
@@ -564,6 +567,37 @@ export default function SondagemPreview({
     .map((item) => `${xByNspt(item.nspt)},${yByDepth(item.profundidade)}`)
     .join(" ");
 
+  const salvarImagem = async () => {
+  if (!exportRef.current) return;
+
+  try {
+    const nomeArquivo = String(furo || "sondagem")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9-_]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase();
+
+    const dataUrl = await toPng(exportRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#FFFFFF",
+      filter: (node) => node?.dataset?.exportIgnore !== "true",
+    });
+
+    const link = document.createElement("a");
+    link.download = `perfil-sondagem-${nomeArquivo || "grafico"}.png`;
+    link.href = dataUrl;
+    link.click();
+  } catch (error) {
+    console.error("Erro ao salvar imagem da sondagem:", error);
+    alert("Não foi possível salvar a imagem do gráfico.");
+  }
+};
+
+
+
+
   if (!preparedReadings.length) {
     return (
       <div className={`rounded-2xl border border-slate-200 bg-white p-6 text-slate-500 shadow-sm ${className}`}>
@@ -573,7 +607,10 @@ export default function SondagemPreview({
   }
 
   return (
-    <div className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}>
+    <div
+    ref={exportRef}
+    className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
+  >
       <div className="flex flex-col gap-1 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-base font-bold text-slate-900">{titulo}</h2>
@@ -582,9 +619,16 @@ export default function SondagemPreview({
           </p>
         </div>
 
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-          Atualização em tempo real
-        </div>
+        <button
+            type="button"
+            onClick={salvarImagem}
+            data-export-ignore="true"
+            className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-100 active:scale-[0.98]"
+            title="Salvar imagem do gráfico completo"
+            >
+            <span aria-hidden="true">⬇</span>
+            Salvar imagem
+            </button>
       </div>
 
       <div className="overflow-x-auto p-4">
@@ -593,6 +637,7 @@ export default function SondagemPreview({
           className="h-auto min-w-[900px] select-none"
           role="img"
           aria-label={`Perfil de sondagem ${furo}`}
+          style={{ fontFamily: 'inherit' }}
         >
           <PatternDefs soilStyles={soilStyles} usedSoilKeys={usedSoilKeys} prefix={prefix} />
 
@@ -752,27 +797,33 @@ export default function SondagemPreview({
           />
 
           {Number.isFinite(Number(nivelAgua)) && (
-            <g>
-              <line
-                x1={xSoil - 18}
-                y1={yByDepth(Number(nivelAgua))}
-                x2={xSoil + soilWidth + 18}
-                y2={yByDepth(Number(nivelAgua))}
+            <g transform={`translate(${xSoil - 25}, ${yByDepth(Number(nivelAgua))})`}>
+                {/* Símbolo de Nível de Água (Triângulo invertido) */}
+                <path d="M 0 0 L 12 0 L 6 8 Z" fill="none" stroke="#2563EB" strokeWidth="1.5" />
+                <line x1="2" y1="10" x2="10" y2="10" stroke="#2563EB" strokeWidth="1" />
+                <line x1="4" y1="13" x2="8" y2="13" stroke="#2563EB" strokeWidth="1" />
+                
+                <line
+                x1="15"
+                y1="0"
+                x2={soilWidth + 40}
+                y2="0"
                 stroke="#2563EB"
-                strokeWidth="2"
-                strokeDasharray="7 5"
-              />
-              <text
-                x={xSoil + soilWidth + 26}
-                y={yByDepth(Number(nivelAgua)) + 4}
-                fontSize="12"
-                fontWeight="700"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+                opacity="0.6"
+                />
+                <text
+                x={soilWidth + 45}
+                y="4"
+                fontSize="11"
+                fontWeight="600"
                 fill="#2563EB"
-              >
+                >
                 NA {formatNumber(Number(nivelAgua), 2)} m
-              </text>
+                </text>
             </g>
-          )}
+            )}
 
           {showNsptGraph && (
             <g>
@@ -858,8 +909,8 @@ export default function SondagemPreview({
                         />
 
                         <text
-                            x={x + 10}
-                            y={y - 5}
+                            x={x + 12}
+                            y={y - 4}
                             fontSize="12"
                             fontWeight="700"
                             fill="#1E3A8A"
@@ -899,36 +950,31 @@ export default function SondagemPreview({
         <div className="border-t border-slate-100 px-5 py-4">
           <h3 className="mb-3 text-sm font-bold text-slate-800">Legenda</h3>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="flex flex-wrap gap-x-6 gap-y-3 mt-2">
             {usedSoilKeys.map((soilKey) => {
-              const style = soilStyles[soilKey] || soilStyles.indefinido;
-
-              return (
-                <div
-                  key={`legend-${soilKey}`}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
-                >
-                  <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0 rounded-md">
+                const style = soilStyles[soilKey] || soilStyles.indefinido;
+                return (
+                <div key={`legend-${soilKey}`} className="flex items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 20 20" className="shrink-0 rounded-sm shadow-sm">
                     <PatternDefs soilStyles={soilStyles} usedSoilKeys={[soilKey]} prefix={`${prefix}-legend`} />
                     <rect
-                      x="1"
-                      y="1"
-                      width="26"
-                      height="26"
-                      rx="5"
-                      fill={`url(#${prefix}-legend-soil-${soilKey})`}
-                      stroke={style.stroke}
+                        x="0"
+                        y="0"
+                        width="20"
+                        height="20"
+                        fill={`url(#${prefix}-legend-soil-${soilKey})`}
+                        stroke={style.stroke}
+                        strokeWidth="0.5"
                     />
-                  </svg>
-
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-slate-800">{style.label}</p>
-                    <p className="truncate text-[11px] text-slate-500">{style.family}</p>
-                  </div>
+                    </svg>
+                    <div className="flex flex-col leading-tight">
+                    <span className="text-xs font-semibold text-slate-700">{style.label}</span>
+                    <span className="text-[10px] text-slate-400">{style.family}</span>
+                    </div>
                 </div>
-              );
+                );
             })}
-          </div>
+            </div>
         </div>
       )}
     </div>
