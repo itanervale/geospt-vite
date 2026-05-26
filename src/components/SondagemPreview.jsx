@@ -253,7 +253,13 @@ function buildLayers(readings, finalDepth) {
     const current = sorted[i];
     const next = sorted[i + 1];
 
-    const top = current.profundidade;
+    // Se a primeira leitura começar em 1 m, preenche o trecho 0–1 m
+    // com o mesmo solo da primeira camada lançada.
+    const top =
+      i === 0 && current.profundidade > 0
+        ? 0
+        : current.profundidade;
+
     const bottom = next ? next.profundidade : finalDepth;
 
     if (bottom <= top) continue;
