@@ -1,4 +1,5 @@
 import React from 'react';
+import SondagemPreview from "./components/SondagemPreview";
 
 // ============================================================================
 // GeoSPT v2.0.7 — Engine atualizada (FIX-F: aceita arrasamento acima do perfil)
@@ -3469,6 +3470,36 @@ function PainelSondagem({ nome, sondagem, onRemover, onDuplicar }) {
   // ------- Leituras -------
   const leituras = sondagem.leituras || [];
 
+  const cotaTopoPreview =
+  sondagem.cotaTopo_m !== null &&
+  sondagem.cotaTopo_m !== undefined &&
+  sondagem.cotaTopo_m !== ""
+    ? Number(sondagem.cotaTopo_m)
+    : 0;
+
+  const leiturasPreview = leituras
+    .map((l, idx) => {
+      const profundidade =
+        l.profundidade_m !== null &&
+        l.profundidade_m !== undefined &&
+        l.profundidade_m !== ""
+          ? Number(l.profundidade_m)
+          : null;
+
+      return {
+        id: idx,
+        profundidade,
+        cota:
+          profundidade !== null
+            ? cotaTopoPreview - profundidade
+            : null,
+        nspt: l.nspt_real ?? l.nspt_calculo ?? null,
+        solo: l.solo || "",
+        familia: l.familia || familiaDoSolo(l.solo),
+      };
+    })
+    .filter((l) => Number.isFinite(l.profundidade))
+    .sort((a, b) => a.profundidade - b.profundidade);
   // Validação da sondagem (usa engine)
   const validacao = window.GeoSPT
     ? window.GeoSPT.validation.validarSondagem(sondagem, nome)
@@ -3548,7 +3579,9 @@ function PainelSondagem({ nome, sondagem, onRemover, onDuplicar }) {
   };
 
   return (
-    <div className="p-4 max-w-5xl">
+    <div className="p-4 max-w-none">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.85fr)] items-start">
+        <section className="min-w-0">
       {/* Cabeçalho do painel */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
@@ -3848,6 +3881,23 @@ function PainelSondagem({ nome, sondagem, onRemover, onDuplicar }) {
           ))}
         </div>
       )}
+
+      </section>
+
+      <aside className="min-w-0 xl:sticky xl:top-4">
+        <SondagemPreview
+          titulo="Visualização"
+          furo={nome}
+          readings={leiturasPreview}
+          cotaTerreno={cotaTopoPreview}
+          finalDepth={sondagem.profundidadeFinal_m || undefined}
+          nivelAgua={sondagem.naInicial_m || sondagem.naFinal_m || undefined}
+          tickStep={1}
+          showLegend={true}
+          showNsptGraph={true}
+        />
+      </aside>
+    </div>
 
       {/* Modal NSPT > 50 */}
       {modalNspt && (
