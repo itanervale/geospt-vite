@@ -1,5 +1,6 @@
 import React from 'react';
 import SondagemPreview from "./components/SondagemPreview";
+import MiniMapa from "./components/MiniMapa";
 
 // ============================================================================
 // GeoSPT v2.0.7 — Engine atualizada (FIX-F: aceita arrasamento acima do perfil)
@@ -4939,9 +4940,9 @@ function AbaEstacas() {
         Cadastro das estacas + configurações globais de cálculo.
       </p>
 
-      <div className="flex flex-col xl:flex-row gap-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(520px,620px)] 2xl:grid-cols-[minmax(0,1fr)_minmax(580px,700px)]">
         {/* Coluna esquerda: tabela de estacas + configs */}
-        <div className="flex-1 space-y-3">
+        <div className="min-w-0 space-y-3">
           {/* Tabela de estacas */}
           <div className="bg-white border border-slate-300 rounded">
             <div className="flex items-center justify-between p-2 border-b border-slate-300 bg-slate-50">
@@ -5007,14 +5008,14 @@ function AbaEstacas() {
           <PainelConfigCalculo config={config} setConfigGlobal={setConfigGlobal} />
         </div>
 
-        {/* Coluna direita: mini-mapa */}
-        <div className="xl:w-96 shrink-0 bg-white border border-slate-300 rounded">
-          <div className="p-2 border-b border-slate-300 bg-slate-50">
-            <h3 className="text-sm font-bold text-slate-700">🗺 Mini-mapa de locação</h3>
-          </div>
-          <div className="p-2">
-            <MiniMapaSVG sondagens={sondagens} estacas={estacas} />
-          </div>
+        {/* Coluna direita: mapa de locação */}
+        <div className="min-w-0">
+          <MiniMapa
+            sondagens={sondagens}
+            estacas={estacas}
+            titulo="Mini-mapa"
+            subtitulo="Locação dos furos de sondagem e estacas"
+          />
         </div>
       </div>
 
